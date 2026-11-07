@@ -7,3 +7,5 @@ data/raw/*
 !data/raw/.gitkeep
 data/intermediate/*
 !data/intermediate/.gitkeep
+DATA_SOURCES.html
+README.html

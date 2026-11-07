@@ -33,12 +33,4 @@ PBA_project_group4/
 └── figures/                   # Plots exported by scripts
 ```
 
-## Data sources
-
-| Data | Coverage | Source | Saved as |
-| --- | --- | --- | --- |
-| A2 injury crash records (National Police Agency) | 2021–2024 | [data.gov.tw](https://data.gov.tw), search "A2類道路交通事故" | `data/raw/*.csv` |
-| County population (Ministry of the Interior) | 10 counties, 2021–2024 | Department of Household Registration statistics | `data/reference/population.csv` |
-| National holidays (for rush-hour outcome) | 2021–2024 | DGPA official office calendar | `data/reference/holidays.csv` |
-
 Team copy of raw data: *[Google Drive link — to be added]*
