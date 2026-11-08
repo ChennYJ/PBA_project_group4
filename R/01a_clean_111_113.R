@@ -1,42 +1,38 @@
-# ===========================================================
-# 01_clean_crashes.R
+# 01a_clean_111_113.R
+# Clean 2022–2024 (ROC 111–113) A2 crash data (new format)
 #
-# Purpose:
-#   Clean NPA A2 crash data for ROC years 111–113
-#   (2022–2024).
+# Input :
+#   data/raw/111/
+#   data/raw/112/
+#   data/raw/113/
 #
-# Input:
-#   ~/Desktop/研究所/PBA/final/raw/
-#     ├── 111/
-#     ├── 112/
-#     └── 113/
-#
-#   Raw data: one row per party（當事者）
+# Raw data:
+#   one row per party（當事者）
 #
 # Output:
-#   ~/Desktop/研究所/PBA/final/data/intermediate/
-#     crashes_111_113.rds
+#   data/intermediate/crashes_111_113.rds
 #
-#   Final data: one row per crash（事故）
+# Final data:
+#   one row per crash
+#   columns: crash_id, date, hour, county, moto
 #
-# Final columns:
-#   crash_id : character
-#   date     : Date
-#   hour     : integer
-#   county   : character
-#   moto     : logical
-# ===========================================================
+# crash_id format:
+#   111_1, 111_2, ...
+#   112_1, 112_2, ...
+#   113_1, 113_2, ...
+#
+# Agreed with 01b_clean_110.R
 
 
 library(tidyverse)
 library(lubridate)
 
 
-# ===========================================================
-# 1. Find A2 files from 111–113
-# ===========================================================
+# -----------------------------------------------------------
+# 1. Find all A2 files from ROC 111–113
+# -----------------------------------------------------------
 
-raw_path <- "~/Desktop/研究所/PBA/final/raw"
+raw_path <- "data/raw"
 
 year_dirs <- file.path(
   raw_path,
@@ -53,7 +49,8 @@ raw_files <- map(
     ignore.case = TRUE
   )
 ) |>
-  unlist()
+  unlist() |>
+  sort()
 
 
 # Check files found
@@ -63,53 +60,42 @@ print(basename(raw_files))
 stopifnot(length(raw_files) > 0)
 
 
-# ===========================================================
+# -----------------------------------------------------------
 # 2. Read and combine all A2 files
-# ===========================================================
+# -----------------------------------------------------------
 
+# Read every column as text to avoid type-guessing problems
 raw <- map_dfr(
   raw_files,
   function(f) {
-
     read_csv(
       f,
-      col_types = cols(
-        .default = col_character()
-      ),
-      locale = locale(
-        encoding = "UTF-8"
-      ),
+      col_types = cols(.default = col_character()),
+      locale = locale(encoding = "UTF-8"),
       show_col_types = FALSE
     )
   }
 )
 
-
 cat("Raw rows:", nrow(raw), "\n")
 
 
-# ===========================================================
-# 3. Keep actual A2 observations
-# ===========================================================
-#
-# Raw CSVs contain some metadata rows.
-#
-# Actual accident rows:
-#   事故類別名稱 == "A2"
-#
-# This removes the metadata rows where 事故類別名稱 is NA.
-# ===========================================================
+# -----------------------------------------------------------
+# 3. Keep actual A2 party records
+# -----------------------------------------------------------
+
+# Raw files contain footer / metadata rows.
+# Actual accident records have 事故類別名稱 == "A2".
 
 raw <- raw |>
   filter(事故類別名稱 == "A2")
 
-
 cat("A2 party rows:", nrow(raw), "\n")
 
 
-# ===========================================================
-# 4. Rename variables needed for analysis
-# ===========================================================
+# -----------------------------------------------------------
+# 4. Rename variables used in cleaning
+# -----------------------------------------------------------
 
 col_map <- c(
   date_raw = "發生日期",
@@ -120,27 +106,22 @@ col_map <- c(
   lat      = "緯度"
 )
 
-
 parties <- raw |>
-  rename(
-    all_of(col_map)
-  )
+  rename(all_of(col_map))
 
 
-# ===========================================================
-# 5. Clean party-level data
-# ===========================================================
+# -----------------------------------------------------------
+# 5. Parse date, hour, county, and party rank
+# -----------------------------------------------------------
 
 parties <- parties |>
   mutate(
 
-    # Example:
     # 20220101 -> 2022-01-01
     date = ymd(date_raw),
 
-    # Ensure HHMMSS has six digits
-    # Example:
-    # 73000 -> 073000
+    # Ensure time is always HHMMSS
+    # Example: 73000 -> 073000
     time_raw = str_pad(
       time_raw,
       width = 6,
@@ -148,27 +129,20 @@ parties <- parties |>
     ),
 
     # Extract hour
-    # Example:
-    # 073000 -> 7
+    # Example: 073000 -> 7
     hour = as.integer(
-      str_sub(
-        time_raw,
-        1,
-        2
-      )
+      str_sub(time_raw, 1, 2)
     ),
 
-    # Standardize place names
-    # 台北市 -> 臺北市
+    # Standardize 台 -> 臺
     place = str_replace_all(
       place,
       "台",
       "臺"
     ),
 
-    # First three characters = county / city
-    # Example:
-    # 臺北市信義區... -> 臺北市
+    # First three characters are county / city
+    # Example: 臺北市信義區... -> 臺北市
     county = str_sub(
       place,
       1,
@@ -182,13 +156,9 @@ parties <- parties |>
   )
 
 
-# ===========================================================
-# 6. Remove exact duplicate rows
-# ===========================================================
-#
-# During QA, a small number of exact duplicate party rows
-# were found.
-# ===========================================================
+# -----------------------------------------------------------
+# 6. Remove exact duplicate party rows
+# -----------------------------------------------------------
 
 rows_before <- nrow(parties)
 
@@ -204,18 +174,15 @@ cat(
 )
 
 
-# ===========================================================
+# -----------------------------------------------------------
 # 7. Create a base crash identifier
-# ===========================================================
+# -----------------------------------------------------------
+
+# New-format data are one row per party and do not contain
+# a directly usable crash ID.
 #
-# There is no reliable official crash ID in the working data.
-#
-# Initial crash identity:
-#   date + time + place + longitude + latitude
-#
-# However, QA showed that a small number of different crashes
-# can share exactly the same combination.
-# ===========================================================
+# First identify crashes using:
+# date + time + place + longitude + latitude
 
 parties_clean <- parties_clean |>
   mutate(
@@ -230,22 +197,25 @@ parties_clean <- parties_clean |>
   )
 
 
-# ===========================================================
-# 8. Separate crashes that share the same base identifier
-# ===========================================================
-#
-# Within one crash, 當事者順位 normally looks like:
+# -----------------------------------------------------------
+# 8. Separate crashes sharing the same base identifier
+# -----------------------------------------------------------
+
+# Normally one crash has party ranks such as:
 #
 #   1, 2
 #   1, 2, 3
 #   1, 2, 3, 4
 #
-# If multiple crashes have the same date/time/place/coordinates:
+# During QA, a small number of different crashes were found
+# to share the same date, time, place, longitude, and latitude.
+#
+# Example:
 #
 #   1, 2, 1, 2
 #
-# each new party_rank == 1 indicates the start of another crash.
-# ===========================================================
+# A new party_rank == 1 therefore marks the beginning of
+# another crash within the same crash_base.
 
 parties_clean <- parties_clean |>
   group_by(crash_base) |>
@@ -260,10 +230,16 @@ parties_clean <- parties_clean |>
   ungroup()
 
 
-# Final unique crash ID
+# All crash groups should start with party rank 1
+stopifnot(
+  all(parties_clean$crash_seq >= 1)
+)
+
+
+# Internal ID used only during data cleaning
 parties_clean <- parties_clean |>
   mutate(
-    crash_id = paste(
+    internal_crash_id = paste(
       crash_base,
       crash_seq,
       sep = "_"
@@ -271,12 +247,12 @@ parties_clean <- parties_clean |>
   )
 
 
-# ===========================================================
+# -----------------------------------------------------------
 # 9. QA: check party structure within crashes
-# ===========================================================
+# -----------------------------------------------------------
 
 crash_check <- parties_clean |>
-  group_by(crash_id) |>
+  group_by(internal_crash_id) |>
   summarise(
     n_rows = n(),
     n_ranks = n_distinct(party_rank),
@@ -304,23 +280,21 @@ cat(
 print(problem_crashes)
 
 
-# In our QA, only two exceptional crashes remained.
-# Both contained exactly one party_rank == 1, so they are
-# retained as single crashes rather than split further.
+# QA during cleaning found only two exceptional crashes remaining.
+# Both contained exactly one rank-1 party, so they are retained
+# as single crashes rather than split further.
 
 
-# ===========================================================
-# 10. Collapse party-level data into crash-level data
-# ===========================================================
-#
-# moto = TRUE if ANY party in the crash is classified as 機車.
-#
-# vehicle NA rows are retained.
-# ===========================================================
+# -----------------------------------------------------------
+# 10. Collapse party-level rows into crash-level rows
+# -----------------------------------------------------------
+
+# A crash is classified as a motorcycle crash if
+# ANY party in that crash is classified as "機車".
 
 crashes <- parties_clean |>
   group_by(
-    crash_id,
+    internal_crash_id,
     date,
     hour,
     county
@@ -334,11 +308,46 @@ crashes <- parties_clean |>
   )
 
 
-# ===========================================================
-# 11. Keep only the team's required schema
-# ===========================================================
+# -----------------------------------------------------------
+# 11. Create agreed final crash_id
+# -----------------------------------------------------------
+
+# Final crash_id format follows 01b:
+#
+# 110 data:
+#   110_1
+#   110_2
+#
+# 111–113 data:
+#   111_1
+#   111_2
+#   ...
+#   112_1
+#   ...
+#   113_1
+#
+# date remains Gregorian, e.g. 2022-01-01.
 
 crashes <- crashes |>
+  mutate(
+    roc_year = year(date) - 1911
+  ) |>
+  arrange(
+    roc_year,
+    date,
+    hour,
+    county,
+    internal_crash_id
+  ) |>
+  group_by(roc_year) |>
+  mutate(
+    crash_id = paste0(
+      roc_year,
+      "_",
+      row_number()
+    )
+  ) |>
+  ungroup() |>
   select(
     crash_id,
     date,
@@ -348,29 +357,44 @@ crashes <- crashes |>
   )
 
 
-# ===========================================================
-# 12. Final sanity checks
-# ===========================================================
+# -----------------------------------------------------------
+# 12. Final checks
+# -----------------------------------------------------------
 
 cat("\n===== FINAL DATA CHECK =====\n")
 
-cat(
-  "Party rows:",
-  nrow(parties_clean),
-  "\n"
-)
 
+# Final structure
+glimpse(crashes)
+
+
+# Number of crashes
 cat(
-  "Crash rows:",
+  "Total crashes:",
   nrow(crashes),
   "\n"
 )
 
 
-# Crash ID must be unique
+# Every crash_id must be unique
 cat(
   "Unique crash IDs:",
   n_distinct(crashes$crash_id),
+  "\n"
+)
+
+stopifnot(
+  n_distinct(crashes$crash_id) ==
+    nrow(crashes)
+)
+
+
+# Date range
+cat(
+  "Date range:",
+  as.character(min(crashes$date, na.rm = TRUE)),
+  "to",
+  as.character(max(crashes$date, na.rm = TRUE)),
   "\n"
 )
 
@@ -383,18 +407,34 @@ cat(
 )
 
 
-# Invalid hours
+# Hour range
 cat(
-  "Invalid hours:",
+  "Hour range:",
+  min(crashes$hour, na.rm = TRUE),
+  "to",
+  max(crashes$hour, na.rm = TRUE),
+  "\n"
+)
+
+
+# Invalid / missing hours
+cat(
+  "Missing hours:",
+  sum(is.na(crashes$hour)),
+  "\n"
+)
+
+cat(
+  "Hours outside 0–23:",
   sum(
-    is.na(crashes$hour) |
+    !is.na(crashes$hour) &
       !crashes$hour %in% 0:23
   ),
   "\n"
 )
 
 
-# Check years
+# Check crashes by year
 print(
   crashes |>
     count(
@@ -421,49 +461,60 @@ print(
 )
 
 
-# Check final structure
-glimpse(crashes)
+# moto should have no NA
+cat(
+  "Missing moto:",
+  sum(is.na(crashes$moto)),
+  "\n"
+)
 
 
-# Confirm crash_id uniqueness
+# Check that crash_id ROC year agrees with date
 stopifnot(
-  nrow(crashes) ==
-    n_distinct(crashes$crash_id)
+  all(
+    str_extract(
+      crashes$crash_id,
+      "^\\d+"
+    ) ==
+      as.character(
+        year(crashes$date) - 1911
+      )
+  )
 )
 
 
-# ===========================================================
+# Confirm final column names
+stopifnot(
+  identical(
+    names(crashes),
+    c(
+      "crash_id",
+      "date",
+      "hour",
+      "county",
+      "moto"
+    )
+  )
+)
+
+
+# -----------------------------------------------------------
 # 13. Save final RDS
-# ===========================================================
-
-output_dir <- file.path(
-  raw_path,
-  "..",
-  "data",
-  "intermediate"
-)
+# -----------------------------------------------------------
 
 dir.create(
-  output_dir,
+  "data/intermediate",
   showWarnings = FALSE,
   recursive = TRUE
 )
 
-
-output_file <- file.path(
-  output_dir,
-  "crashes_111_113.rds"
-)
-
-
 write_rds(
   crashes,
-  output_file
+  "data/intermediate/crashes_111_113.rds"
 )
-
 
 cat(
   "\nSaved to:",
-  output_file,
+  "data/intermediate/crashes_111_113.rds",
   "\n"
 )
