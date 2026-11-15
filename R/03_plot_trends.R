@@ -134,7 +134,7 @@ p_gap <- ggplot(gap, aes(month, gap)) +
 fig1 <- p_trend / p_gap +
   plot_layout(heights = c(2, 1)) +
   plot_annotation(
-    title = "Did motorcycle crashes fall more where TPASS was new?",
+    title = "Motorcycle casualty crash trends before and after July 2023",
     caption = paste0(
       "Source: National Police Agency ", if (outcome == "a1a2") "A1+A2" else "A2",
       " crash records; Ministry of the Interior population.\n",
