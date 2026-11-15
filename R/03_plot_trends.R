@@ -19,6 +19,22 @@ library(patchwork)
 
 panel <- read_csv("data/clean/panel_daily.csv", show_col_types = FALSE)
 
+# Choose the outcome:
+#   "a2"   = A2 only  -> fig1_trends.png (original figure)
+#   "a1a2" = A1 + A2  -> fig2_trends_A1A2.png
+outcome <- "a1a2"
+
+if (outcome == "a1a2") {
+  panel <- panel |>
+    mutate(n_moto          = n_moto_a1a2,
+           n_moto_rush     = n_moto_rush_a1a2,
+           moto_crash_rate = moto_crash_rate_a1a2)
+}
+
+fig_file    <- if (outcome == "a1a2") "figures/fig2_trends_A1A2.png" else "figures/fig1_trends.png"
+table_file  <- if (outcome == "a1a2") "figures/table2_descriptives_A1A2.csv" else "figures/table1_descriptives.csv"
+crash_label <- if (outcome == "a1a2") "casualty (A1+A2)" else "injury (A2)"
+
 tpass_start <- ymd("2023-07-01")
 covid_start <- ymd("2021-05-19")
 covid_end   <- ymd("2021-07-26")
@@ -71,7 +87,7 @@ p_trend <- ggplot(monthly, aes(month, index, colour = group)) +
   labs(x = NULL,
        y = "Crash rate index\n(pre-TPASS mean = 100)",
        colour = NULL,
-       title = "A. Motorcycle injury crash rate, by group") +
+       title = paste("A. Motorcycle", crash_label, "crash rate, by group")) +
   theme_minimal(base_size = 11) +
   theme(legend.position = "top",
         legend.justification = "left",
@@ -120,14 +136,15 @@ fig1 <- p_trend / p_gap +
   plot_annotation(
     title = "Did motorcycle crashes fall more where TPASS was new?",
     caption = paste0(
-      "Source: National Police Agency A2 crash records; Ministry of the Interior population.\n",
+      "Source: National Police Agency ", if (outcome == "a1a2") "A1+A2" else "A2",
+      " crash records; Ministry of the Interior population.\n",
       "Monthly crashes involving at least one motorcycle per 100,000 residents per day, ",
       "population-weighted within each group."),
     theme = theme(plot.title = element_text(face = "bold", size = 14),
                   plot.caption = element_text(hjust = 0, colour = "grey40", size = 8))
   )
 
-ggsave("figures/fig1_trends.png", fig1, width = 9, height = 6.5, dpi = 300, bg = "white")
+ggsave(fig_file, fig1, width = 9, height = 6.5, dpi = 300, bg = "white")
 
 # ---- 4. Table 1: descriptive statistics (2x2 DiD by hand) ----------------
 # Population-weighted mean daily rate per 100,000, by group and period
@@ -158,4 +175,4 @@ cat(sprintf("\nRaw DiD, all hours : %+.4f crashes per 100,000 per day\n", did_al
 cat(sprintf("Raw DiD, rush hours: %+.4f crashes per 100,000 per day\n", did_rush))
 cat(sprintf("Change in mean gap (index points, Panel B): %+.1f\n", did_index))
 
-write_csv(desc, "figures/table1_descriptives.csv")
+write_csv(desc, table_file)

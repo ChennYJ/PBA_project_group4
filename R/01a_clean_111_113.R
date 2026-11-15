@@ -1,5 +1,5 @@
 # 01a_clean_111_113.R
-# Clean 2022–2024 (ROC 111–113) A2 crash data (new format)
+# Clean 2022–2024 (ROC 111–113) A1 and A2 crash data (new format)
 #
 # Input :
 #   data/raw/111/
@@ -14,7 +14,7 @@
 #
 # Final data:
 #   one row per crash
-#   columns: crash_id, date, hour, county, moto
+#   columns: crash_id, date, hour, county, moto, class
 #
 # crash_id format:
 #   111_1, 111_2, ...
@@ -27,9 +27,8 @@
 library(tidyverse)
 library(lubridate)
 
-
 # -----------------------------------------------------------
-# 1. Find all A2 files from ROC 111–113
+# 1. Find all A1 and A2 files from ROC 111–113
 # -----------------------------------------------------------
 
 raw_path <- "data/raw"
@@ -43,7 +42,7 @@ raw_files <- map(
   year_dirs,
   ~ list.files(
     .x,
-    pattern = "^A2.*\\.csv$",
+    pattern = "^A[12]_.*\\.csv$",
     full.names = TRUE,
     recursive = TRUE,
     ignore.case = TRUE
@@ -61,7 +60,7 @@ stopifnot(length(raw_files) > 0)
 
 
 # -----------------------------------------------------------
-# 2. Read and combine all A2 files
+# 2. Read and combine all A1 and A2 files
 # -----------------------------------------------------------
 
 # Read every column as text to avoid type-guessing problems
@@ -81,14 +80,14 @@ cat("Raw rows:", nrow(raw), "\n")
 
 
 # -----------------------------------------------------------
-# 3. Keep actual A2 party records
+# 3. Keep A1 & A2 party records
 # -----------------------------------------------------------
 
 # Raw files contain footer / metadata rows.
-# Actual accident records have 事故類別名稱 == "A2".
+# Actual accident records have 事故類別名稱 == "A1" or "A2".
 
 raw <- raw |>
-  filter(事故類別名稱 == "A2")
+  filter(事故類別名稱 %in% c("A1", "A2"))
 
 cat("A2 party rows:", nrow(raw), "\n")
 
@@ -98,12 +97,13 @@ cat("A2 party rows:", nrow(raw), "\n")
 # -----------------------------------------------------------
 
 col_map <- c(
-  date_raw = "發生日期",
-  time_raw = "發生時間",
-  place    = "發生地點",
-  vehicle  = "當事者區分-類別-大類別名稱-車種",
-  lon      = "經度",
-  lat      = "緯度"
+  date_raw    = "發生日期",
+  time_raw    = "發生時間",
+  place       = "發生地點",
+  vehicle     = "當事者區分-類別-大類別名稱-車種",
+  lon         = "經度",
+  lat         = "緯度",
+  class       = "事故類別名稱"
 )
 
 parties <- raw |>
@@ -187,6 +187,7 @@ cat(
 parties_clean <- parties_clean |>
   mutate(
     crash_base = paste(
+      class,
       date_raw,
       time_raw,
       place,
@@ -304,8 +305,10 @@ crashes <- parties_clean |>
       vehicle == "機車",
       na.rm = TRUE
     ),
+    class = first(class),   # crash-level field: same for every party
     .groups = "drop"
-  )
+  ) |>
+  mutate(class = factor(class, levels = c("A1", "A2")))
 
 
 # -----------------------------------------------------------
@@ -353,7 +356,8 @@ crashes <- crashes |>
     date,
     hour,
     county,
-    moto
+    moto,
+    class
   )
 
 
@@ -484,16 +488,12 @@ stopifnot(
 
 
 # Confirm final column names
+print(count(crashes, class))
+
 stopifnot(
   identical(
     names(crashes),
-    c(
-      "crash_id",
-      "date",
-      "hour",
-      "county",
-      "moto"
-    )
+    c("crash_id", "date", "hour", "county", "moto", "class")
   )
 )
 

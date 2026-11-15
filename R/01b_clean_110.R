@@ -1,19 +1,21 @@
 # 01b_clean_110.R
-# Clean 2021 (ROC 110) A2 crash data (old format)
-# Input : data/raw/110/A2_110_H1.csv, A2_110_H2.csv (one row per crash)
+# Clean 2021 (ROC 110) A1 and A2 crash data (old format)
+# Input : data/raw/110/A1_110.csv, A2_110_H1.csv, A2_110_H2.csv (one row per crash)
 # Output: data/intermediate/crashes_110.rds (one row per crash)
-#         columns: crash_id, date, hour, county, moto (agreed with 01a)
+#         columns: crash_id, date, hour, county, moto, class (agreed with 01a)
 
 library(tidyverse)
 
-# ---- 1. Read and combine both half-year files ----
+# ---- 1. Read and combine the A1 file and both A2 half-year files ----
 
-files_110 <- c("data/raw/110/A2_110_H1.csv",
+files_110 <- c("data/raw/110/A1_110.csv",
+               "data/raw/110/A2_110_H1.csv",
                "data/raw/110/A2_110_H2.csv")
 
-# Read every column as text; bind the two files into one table
+# Read every column as text; record A1 / A2 from the file name
 raw_110 <- map_dfr(files_110, function(f) {
-  read_csv(f, col_types = cols(.default = "c"))
+  read_csv(f, col_types = cols(.default = "c")) |>
+    mutate(class = str_extract(basename(f), "^A[12]"))
 })
 
 nrow(raw_110)    # total number of crashes in 2021
@@ -36,8 +38,8 @@ crashes_110 <- raw_110 |>
   # (e.g. "資料提供日期：111年07月01日", "事故類別：A2類")
   filter(!is.na(date))
 
-# Check: exactly 4 footer rows removed (2 per file)
-nrow(raw_110) - nrow(crashes_110)   # should be 4
+# Check: exactly 6 footer rows removed (2 footer rows x 3 files)
+nrow(raw_110) - nrow(crashes_110)   # should be 6
 
 # Check: date range and hour range
 range(crashes_110$date)   # should be 2021-01-01 to 2021-12-31
@@ -69,11 +71,15 @@ sum(is.na(crashes_110$moto))
 # Old format is already one row per crash, so the row number is a unique ID
 # Prefix "110_" so IDs never clash with 01a's IDs after binding in 02
 crashes_110 <- crashes_110 |>
-  mutate(crash_id = paste0("110_", row_number())) |>
-  select(crash_id, date, hour, county, moto)
+  mutate(
+    crash_id = paste0("110_", row_number()),
+    class    = factor(class, levels = c("A1", "A2"))
+  ) |>
+  select(crash_id, date, hour, county, moto, class)
 
 # Check: structure of the final table
 glimpse(crashes_110)
+count(crashes_110, class)
 
 # Check: every crash_id is unique (should be TRUE)
 n_distinct(crashes_110$crash_id) == nrow(crashes_110)

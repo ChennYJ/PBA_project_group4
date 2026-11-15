@@ -45,15 +45,18 @@ daily <- crashes |>
   mutate(rush = wday(date, week_start = 1) <= 5 &
                 hour %in% c(7, 8, 17, 18)) |>
   group_by(county, date) |>
-  summarise(n_moto      = n(),
-            n_moto_rush = sum(rush),
-            .groups     = "drop")
+  summarise(n_moto           = sum(class == "A2"),          # A2 only (original spec)
+            n_moto_rush      = sum(class == "A2" & rush),
+            n_moto_a1a2      = n(),                         # A1 + A2
+            n_moto_rush_a1a2 = sum(rush),
+            .groups          = "drop")
 
 # ---- 3. Full grid so days with zero crashes are kept ----
 panel <- expand_grid(county = study_counties,
                      date   = seq(start_date, end_date, by = "day")) |>
   left_join(daily, by = c("county", "date")) |>
-  mutate(across(c(n_moto, n_moto_rush), ~ replace_na(.x, 0L)),
+  mutate(across(c(n_moto, n_moto_rush, n_moto_a1a2, n_moto_rush_a1a2),
+                ~ replace_na(.x, 0L)),
          year = as.integer(year(date))) |>
   left_join(pop, by = c("county", "year")) |>
   mutate(
@@ -61,7 +64,9 @@ panel <- expand_grid(county = study_counties,
     post  = as.integer(date >= tpass_start),
     treat = as.integer(group == "treatment" & post == 1),
     moto_crash_rate      = n_moto      / pop * 1e5,
-    moto_crash_rate_rush = n_moto_rush / pop * 1e5
+    moto_crash_rate_rush = n_moto_rush / pop * 1e5,
+    moto_crash_rate_a1a2      = n_moto_a1a2      / pop * 1e5,
+    moto_crash_rate_rush_a1a2 = n_moto_rush_a1a2 / pop * 1e5
   )
 
 # ---- 4. Checks ----
