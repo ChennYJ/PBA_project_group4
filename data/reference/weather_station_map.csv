@@ -1,0 +1,21 @@
+county,role,station_id,station_name,station_type,altitude_m,longitude,latitude,dist_to_county_hall_km,station_start,station_end,coverage_start,coverage_end,reason,closer_stations_rejected,web_remark
+南投縣,primary,C0I460,南投,auto,110,120.687331,23.911469,1,2015-09-03,,2021-01-01,2024-11-30,nearest continuous automatic station to county hall,,
+南投縣,alternate,C0I410,名間,auto,180,120.701447,23.837053,7.4,2015-09-30,,2021-01-01,2024-11-30,next-nearest continuous station,,
+基隆市,primary,466940,基隆,cwb,26.7,121.740475,25.133314,0.4,1946-01-01,,2021-01-01,2024-11-30,"manned station within 10 km of county hall, continuous",,
+基隆市,alternate,C0B010,七堵,auto,38,121.71713,25.094819,4.9,2018-06-23,,2021-01-01,2024-11-30,next-nearest continuous station,,
+屏東縣,primary,C0R570,麟洛,auto,37,120.52719,22.65078,5.4,2013-06-19,,2021-01-01,2024-11-30,nearest continuous automatic station to county hall,C0R170 屏東 (ends 2024-11-02),
+屏東縣,alternate,C0R480,長治,auto,57,120.542622,22.693128,5.7,2013-06-07,,2021-01-01,2024-11-30,next-nearest continuous station,C0R170 屏東 (ends 2024-11-02),
+彰化縣,primary,C0G910,花壇,auto,42,120.549461,24.032076,5,2019-12-20,,2021-01-01,2024-11-30,nearest continuous automatic station to county hall,,
+彰化縣,alternate,C0G780,秀水,auto,27,120.503869,24.03405,6.1,2011-08-01,,2021-01-01,2024-11-30,next-nearest continuous station,,
+新北市,primary,C0AH10,永和,auto,30,121.508111,25.01125,4.3,2013-12-24,,2021-01-01,2024-11-30,nearest continuous automatic station to county hall,C0AJ80 板橋 (starts 2023-01-03); 466880 板橋 (ends 2022-12-31); C0AG90 中和 (ends 2021-08-03); C0AG80 中和 (starts 2021-10-18); C0A9D0 永和 (ends 2013-12-03),
+新北市,alternate,C0ACA0,新莊,auto,25,121.446756,25.051478,4.7,2009-12-01,,2021-01-01,2024-11-30,next-nearest continuous station,C0AJ80 板橋 (starts 2023-01-03); 466880 板橋 (ends 2022-12-31); C0AG90 中和 (ends 2021-08-03); C0AG80 中和 (starts 2021-10-18); C0A9D0 永和 (ends 2013-12-03),原(C1ACA0)站因擴充為氣象站，於2009/12/1升級為(C0ACA0)站，站址搬遷至同校行政大樓西側。
+桃園市,primary,C0C480,桃園,auto,105,121.323172,24.992425,2.2,2008-01-01,2025-12-31,2021-01-01,2024-11-30,nearest continuous automatic station to county hall,,本站原為雨量站(C1C480)，於2008/1/1擴充為氣象站，變更站碼為(C0C480)。原(C0C480)自動氣象站，於2026/03/16完成儀器汰換，轉為(C2C480)農業站。
+桃園市,alternate,C0C700,中壢,auto,151,121.256375,24.977661,4.8,2017-12-27,,2021-01-01,2024-11-30,next-nearest continuous station,,
+臺北市,primary,466920,臺北,cwb,6.3,121.514853,25.037658,4.9,1896-01-01,,2021-01-01,2024-11-30,"manned station within 10 km of county hall, continuous",C0A9H0 信義 (ends 2009-03-31); C0AC70 信義 (manned station preferred); C0AH70 松山 (manned station preferred); C0AC80 文山 (manned station preferred); C0A9G0 南港 (ends 2018-06-07); C0A9F0 內湖 (manned station preferred),1992/02至1997/08因本署改建，觀測地點移至臺北師院(466921)。2014至2015氣候年報之氣壓計海面上高度應為30.3m(2014/10/25搬遷，6.6m->30.3m)。
+臺北市,alternate,C0AC70,信義,auto,71,121.564597,25.037822,0.1,2009-03-31,,2021-01-01,2024-11-30,next-nearest continuous station,C0A9H0 信義 (ends 2009-03-31); C0AC70 信義 (manned station preferred); C0AH70 松山 (manned station preferred); C0AC80 文山 (manned station preferred); C0A9G0 南港 (ends 2018-06-07); C0A9F0 內湖 (manned station preferred),
+臺南市,primary,467410,臺南,cwb,40.8,120.20492,22.99328,2,1897-01-01,,2021-01-01,2024-11-30,"manned station within 10 km of county hall, continuous",,1998/05停止觀測，2002/01恢復觀測。2002年至2006年氣候年報之風速儀地上高度應為53.7m。
+臺南市,alternate,C0X100,臺南市北區,auto,10,120.194228,23.010394,2.3,2013-02-20,,2021-01-01,2024-11-30,next-nearest continuous station,,
+苗栗縣,primary,C0E750,苗栗,auto,72,120.824575,24.564569,0.6,2011-02-21,,2021-01-01,2024-11-30,nearest continuous automatic station to county hall,,於2025/09/15完成儀器汰換。
+苗栗縣,alternate,C0E870,高鐵苗栗,auto,34,120.826094,24.60725,5.3,2017-08-01,,2021-01-01,2024-11-30,next-nearest continuous station,,
+高雄市,primary,C0V490,新興,auto,20,120.298803,22.627422,1.6,2009-10-13,,2021-01-01,2024-11-30,nearest continuous automatic station to county hall,,本站於2013/9/12起進行儀器汰換，並於2013/12/1完成驗收。於2024/01/08完成儀器汰換。
+高雄市,alternate,C0V710,苓雅,auto,34,120.330669,22.622742,1.9,2013-10-03,,2021-01-01,2024-11-30,next-nearest continuous station,,
