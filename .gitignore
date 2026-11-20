@@ -9,3 +9,7 @@ data/intermediate/*
 !data/intermediate/.gitkeep
 DATA_SOURCES.html
 README.html
+# T3 raw files are small (< 2 MB) and needed to rerun 04a-04c, so keep them on GitHub
+!data/raw/calendar/
+!data/raw/closures/
+!data/raw/weather/
